@@ -30,12 +30,14 @@ jobs:
           if-no-files-found: error
 
       # 打 tag（v1.1.1 这种）时把 exe 改名后直接挂到 Releases，无需解压
-      - name: Prepare release exe
+      # 注意：GitHub 会把非 ASCII 的资产名改写成 default.<ext>，所以这里统一用 ASCII 文件名上传
+      - name: Prepare release assets
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         run: |
           Copy-Item dist\ShakeShake.exe ShakeShake-x64.exe
-          Get-Item ShakeShake-x64.exe | Select-Object Name, Length
+          Copy-Item dist\使用说明.txt ShakeShake-Manual.txt
+          Get-ChildItem ShakeShake-x64.exe, ShakeShake-Manual.txt | Select-Object Name, Length
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -43,5 +45,5 @@ jobs:
         with:
           files: |
             ShakeShake-x64.exe
-            dist/使用说明.txt
+            ShakeShake-Manual.txt
           generate_release_notes: true

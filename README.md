@@ -13,7 +13,7 @@ Windows 上的「晃动鼠标放大指针」小工具（类似 macOS 的 shake t
 ## 下载
 
 到 [Releases](../../releases/latest) 下载 **`ShakeShake-x64.exe`**，双击即用——绿色单文件，
-不需要安装，也不需要 .NET SDK。同一个 Release 里还提供 `使用说明.txt` 下载。
+不需要安装，也不需要 .NET SDK。同一个 Release 里还有 `ShakeShake-Manual.txt`（中文使用说明）。
 
 > 首次运行时 Windows SmartScreen 可能提示"未知发布者"，点「更多信息」→「仍要运行」即可。
 > 这是未签名程序的正常提示；源码全部公开，可自行编译核对。
