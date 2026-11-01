@@ -1,6 +1,6 @@
 # 晃晃 ShakeShake
 
-> 🤖 **本项目由 AI 开发**：代码、测试、文档与 CI 配置均由 AI 生成，人工负责需求定义与验收。
+> 🤖 本项目由 AI 开发。
 
 Windows 上的「晃动鼠标放大指针」小工具（类似 macOS 的 shake to find cursor）。
 
