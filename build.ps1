@@ -23,7 +23,7 @@ $common = @(
     '/r:System.dll', '/r:System.Core.dll', '/r:System.Drawing.dll', '/r:System.Windows.Forms.dll'
 )
 
-$appArgs = @('/target:winexe', ('/out:' + $out))
+$appArgs = @('/target:winexe', '/platform:x64', ('/out:' + $out))
 if (Test-Path $icon) { $appArgs += ('/win32icon:' + $icon) }
 
 & $csc @($appArgs + $common + $sources)

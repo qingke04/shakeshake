@@ -12,8 +12,11 @@ Windows 上的「晃动鼠标放大指针」小工具（类似 macOS 的 shake t
 
 ## 下载
 
-到 [Releases](../../releases/latest) 下载最新版 `ShakeShake-x.y.z.zip`，解压后双击
-`ShakeShake.exe` 即可。绿色单文件，不需要安装，也不需要 .NET SDK。
+到 [Releases](../../releases/latest) 下载 **`ShakeShake-x64.exe`**，双击即用——绿色单文件，
+不需要安装，也不需要 .NET SDK。同一个 Release 里还提供 `使用说明.txt` 下载。
+
+> 首次运行时 Windows SmartScreen 可能提示"未知发布者"，点「更多信息」→「仍要运行」即可。
+> 这是未签名程序的正常提示；源码全部公开，可自行编译核对。
 
 用户文档见 [`dist/使用说明.txt`](dist/使用说明.txt)。
 
@@ -32,7 +35,7 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1          # 只编译
 powershell -ExecutionPolicy Bypass -File .\build.ps1 -Tests   # 编译 + 跑检测算法单元测试
 ```
 
-产物：`dist\ShakeShake.exe`。
+产物：`dist\ShakeShake.exe`（64 位，编译时带 `/platform:x64`）。
 
 源码是 **C# 5**（系统自带 `csc.exe` 只支持到 C# 5），所以代码里不要用字符串插值、`?.`、`nameof` 等新语法。
 编译时必须带 `/codepage:65001`（源码是 UTF-8），否则中文会乱码。
