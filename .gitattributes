@@ -1,0 +1,12 @@
+# 统一换行，避免不同系统协作时整个文件产生 diff
+* text=auto
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.cs  text
+*.md  text
+
+# 二进制
+*.ico binary
+*.png binary
+*.exe binary

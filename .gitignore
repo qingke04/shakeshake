@@ -1,0 +1,29 @@
+# 构建产物（dist\使用说明.txt 是手写文档，故意保留在仓库里）
+dist/*
+!dist/使用说明.txt
+
+# 编译出来的 exe / pdb
+tests/*.exe
+tests/*.pdb
+spike/*.exe
+spike/*.pdb
+*.pdb
+*.obj
+
+# Visual Studio / .NET
+.vs/
+bin/
+obj/
+*.user
+*.suo
+project.lock.json
+
+# 运行时产生的临时文件
+*.log
+*.tmp
+enlarged.marker
+
+# 系统垃圾文件
+Thumbs.db
+Desktop.ini
+.DS_Store

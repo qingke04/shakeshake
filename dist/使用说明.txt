@@ -1,0 +1,75 @@
+晃晃 ShakeShake 1.1.1
+=====================
+
+一句话：快速来回晃动鼠标，指针会平滑地放大（默认 3 倍）；停下约 0.1 秒后平滑缩回。
+
+
+【怎么用】
+1. 双击 ShakeShake.exe（绿色版，不用安装）。
+   第一次运行时 Windows 可能弹出蓝色 SmartScreen 提示：
+   点「更多信息」→「仍要运行」即可。
+2. 程序会缩到右下角托盘（时钟旁边的小箭头 ^ 里），并自动打开设置窗口。
+3. 在任意程序里，快速左右（或上下）来回晃几下鼠标 —— 指针会变成 3 倍大。
+4. 停止晃动约 0.1 秒，指针自动缩回。
+5. 托盘图标右键：启用 / 暂停、设置、退出。双击托盘图标 = 打开设置。
+
+
+【设置项】
+- 界面语言：跟随系统 / English / 简体中文。
+  「跟随系统」时，只有系统显示语言是“简体中文”才用中文，其他语言一律英文。
+- 晃动鼠标时放大指针：总开关。
+- 放大倍数：2.0× ～ 6.0×，默认 3.0×。
+- 在这些程序里不放大：按 exe 文件名添加，例如 dota2.exe。
+  ·「浏览添加…」直接选 exe；
+  ·「加入当前程序」点完后 3 秒内切到目标窗口，会自动填入。
+- 开机自动启动：勾选后登录 Windows 自动运行。
+- 高级：
+  · 灵敏度 1～10：越高越容易触发（默认 5）。
+  · 停止晃动后恢复：50～500 毫秒（默认 100）。
+
+
+【快捷键】
+Ctrl + Alt + S：暂停 / 恢复（暂停时托盘图标变灰）。
+
+想换成别的组合，可编辑配置文件里的 hotkey，例如：
+  hotkey=Ctrl+Alt+Q
+  hotkey=Ctrl+Shift+F2
+
+
+【文件在哪】
+设置：%APPDATA%\ShakeShake\settings.ini   （纯文本，可手动改）
+日志：%APPDATA%\ShakeShake\shakeshake.log
+
+卸载：删除 ShakeShake.exe 即可（绿色版）。
+彻底清理：再删除 %APPDATA%\ShakeShake 文件夹，并删除注册表
+HKCU\Software\Microsoft\Windows\CurrentVersion\Run 下的 ShakeShake 值。
+
+
+【安全与限制】
+- 只把系统当前的光标文件按更大尺寸加载后临时替换，不改动你的任何系统设置，
+  不需要管理员权限，也不会残留。
+- 暂停、退出、异常退出都会自动还原；即使强行结束进程，
+  下次启动也会自动还原成正常大小。
+- 独占全屏、自己绘制光标的游戏里看不到效果（Windows 的系统光标本来就不显示），
+  建议把这类游戏加入排除名单。
+- UAC 弹窗、锁屏界面不生效（系统限制，普通程序碰不到）。
+- 放大用的素材就是你当前鼠标方案里的光标文件（aero_arrow.cur 等），
+  所以放大后依然清晰，不会糊。
+
+
+English
+-------
+Shake the mouse quickly back and forth: the pointer grows (default 3x) and
+shrinks back 0.1 s after you stop.
+
+- Run ShakeShake.exe. It is portable: no installer, no admin rights, and it
+  does not change any Windows settings.
+- It lives in the notification area. Right-click the tray icon for
+  Enable / Settings / Exit; double-click it to open Settings.
+- Ctrl+Alt+S pauses / resumes.
+- Settings: %APPDATA%\ShakeShake\settings.ini
+- Not effective in exclusive-fullscreen games or apps that draw their own
+  cursor; add those to the exclude list. UAC prompts and the lock screen are
+  not covered (Windows does not allow normal apps there).
+- If a previous run was killed while enlarged, the next start restores the
+  normal cursor automatically.
