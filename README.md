@@ -6,7 +6,7 @@ Windows 上的「晃动鼠标放大指针」小工具（类似 macOS 的 shake t
 
 快速来回晃动鼠标 → 系统光标临时放大（默认 3×）→ 停止晃动约 100ms 后恢复。
 
-- 绿色单文件 exe（约 90 KB），无需安装、无需管理员权限、不依赖任何运行库
+- 绿色单文件 exe（约 150 KB），无需安装、无需管理员权限、不依赖任何运行库
 - 中文 / English 双语界面，可选「跟随系统」
 - 可自定义放大倍数、灵敏度、恢复延迟
 - 可指定某些程序（如游戏）内不生效
@@ -72,12 +72,26 @@ src/
   Native.cs           Win32 声明
   Log.cs / SelfTest.cs
 assets/
-  make_icon.py        用 Pillow 生成多尺寸 app.ico
-  app.ico
+  icon_master.png     图标母版（1254×1254 原图，改图标只改这里）
+  make_icon.py        用 Pillow 从 icon_master.png 生成多尺寸 app.ico
+  app.ico             多尺寸图标（16～256 共 9 档），构建时嵌进 exe
+  preview_*.png       各尺寸预览图（256/32/16 以及 16 像素的放大版）
 tests/
   DetectorTests.cs    晃动检测算法单测（10 个用例）
   UiLayoutTests.cs    设置窗口布局回归（展开/收起/中英文）
 ```
+
+## 图标
+
+图标母版只有 `assets\icon_master.png` 一个文件，换图标就是换它（或运行时直接传入新图）：
+
+```powershell
+python .\assets\make_icon.py                 # 用当前 icon_master.png 重新生成 app.ico
+python .\assets\make_icon.py .\new-icon.png  # 换成新图并重新生成
+```
+
+`app.ico` 含 16/20/24/32/40/48/64/128/256 九档，构建时用 `/win32icon` 嵌进 exe；
+托盘图标和设置窗口图标都取自 exe 自带的这份图标。
 
 ## 实现要点
 

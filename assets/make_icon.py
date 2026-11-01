@@ -1,40 +1,87 @@
-﻿from PIL import Image, ImageDraw, ImageFilter
+"""Generate assets/app.ico (multi-size) and preview PNGs from a master PNG.
+
+The master artwork lives in assets/icon_master.png; this script only scales it
+down, it never invents new artwork.
+
+Usage:
+    python assets/make_icon.py              # rebuild from assets/icon_master.png
+    python assets/make_icon.py new.png      # replace the master, then rebuild
+"""
+from PIL import Image
 import os
+import shutil
+import struct
+import sys
 
-S = 1024
-top = (46, 62, 92)
-bot = (17, 25, 40)
+HERE = os.path.dirname(os.path.abspath(__file__))
+MASTER = os.path.join(HERE, "icon_master.png")
 
-grad = Image.new("RGBA", (S, S))
-gd = ImageDraw.Draw(grad)
-for y in range(S):
-    t = y / (S - 1)
-    gd.line([(0, y), (S, y)], fill=(int(top[0]+(bot[0]-top[0])*t), int(top[1]+(bot[1]-top[1])*t), int(top[2]+(bot[2]-top[2])*t), 255))
-mask = Image.new("L", (S, S), 0)
-ImageDraw.Draw(mask).rounded_rectangle([0, 0, S-1, S-1], radius=230, fill=255)
-img = Image.composite(grad, Image.new("RGBA", (S, S), (0,0,0,0)), mask)
+# Sizes Windows asks for: shell/taskbar/tray (16-64), Alt-Tab and file
+# properties (128), and the 256px "extra large" view.
+SIZES = (16, 20, 24, 32, 40, 48, 64, 128, 256)
 
-h = 800.0
-w = h * 0.62
-pts = [(0.02,0.00),(0.02,0.74),(0.26,0.52),(0.41,0.98),(0.60,0.90),(0.45,0.44),(0.74,0.41)]
-pad = 70
-layer = Image.new("RGBA", (int(w)+pad*2, int(h)+pad*2), (0,0,0,0))
-poly = [(pad+p[0]*w, pad+p[1]*h) for p in pts]
 
-sh = Image.new("RGBA", layer.size, (0,0,0,0))
-ImageDraw.Draw(sh).polygon([(x+16,y+22) for x,y in poly], fill=(0,0,0,130))
-sh = sh.filter(ImageFilter.GaussianBlur(20))
-layer = Image.alpha_composite(layer, sh)
+def load_master():
+    im = Image.open(MASTER)
+    if im.mode != "RGBA":
+        im = im.convert("RGBA")
+    return im
 
-ld = ImageDraw.Draw(layer)
-ld.polygon(poly, fill=(255,255,255,255))
-ld.line(poly+[poly[0]], fill=(255,255,255,255), width=20, joint="curve")
 
-img.alpha_composite(layer, (int((S-layer.width)/2)+18, int((S-layer.height)/2)+6))
-img.save("assets/icon_master.png")
-sizes = [16,20,24,32,40,48,64,128,256]
-img.save("assets/app.ico", format="ICO", sizes=[(s,s) for s in sizes])
-for s in (256,32,16):
-    im = img.resize((s,s), Image.LANCZOS); im.save("assets/preview_%d.png" % s)
-    if s == 16: im.resize((256,256), Image.NEAREST).save("assets/preview_16_zoom.png")
-print("ok", os.path.getsize("assets/app.ico"))
+def fix_ico_planes(path):
+    """Pillow writes wPlanes=0 in every ICONDIRENTRY; the spec says 1.
+
+    Windows ignores the field, but stricter icon tools and validators expect
+    1, so patch the header after Pillow has written the file.
+    """
+    with open(path, "r+b") as f:
+        data = bytearray(f.read())
+        count = struct.unpack_from("<H", data, 4)[0]
+        for i in range(count):
+            struct.pack_into("<H", data, 6 + i * 16 + 4, 1)
+        f.seek(0)
+        f.write(data)
+
+
+def main():
+    if len(sys.argv) > 1:
+        src = os.path.abspath(sys.argv[1])
+        if not os.path.isfile(src):
+            raise SystemExit("master not found: %s" % src)
+        if src.lower() != MASTER.lower():
+            shutil.copyfile(src, MASTER)
+        print("master <-", src)
+
+    if not os.path.isfile(MASTER):
+        raise SystemExit("master not found: %s" % MASTER)
+
+    master = load_master()
+    print("master:", master.size, master.mode)
+
+    # Pre-scale every frame ourselves so each size gets a clean LANCZOS pass
+    # from the full-resolution master (no compounding resizes).
+    frames = [master.resize((s, s), Image.LANCZOS) for s in SIZES]
+
+    ico = os.path.join(HERE, "app.ico")
+    frames[-1].save(
+        ico,
+        format="ICO",
+        sizes=[(s, s) for s in SIZES],
+        append_images=frames[:-1],
+    )
+    fix_ico_planes(ico)
+
+    # Preview PNGs for docs / eyeballing: 256, 32, 16 and an 8x zoom of 16.
+    frames[SIZES.index(256)].save(os.path.join(HERE, "preview_256.png"))
+    frames[SIZES.index(32)].save(os.path.join(HERE, "preview_32.png"))
+    preview16 = frames[SIZES.index(16)]
+    preview16.save(os.path.join(HERE, "preview_16.png"))
+    preview16.resize((256, 256), Image.NEAREST).save(
+        os.path.join(HERE, "preview_16_zoom.png")
+    )
+
+    print("wrote:", ico, os.path.getsize(ico), "bytes")
+
+
+if __name__ == "__main__":
+    main()
