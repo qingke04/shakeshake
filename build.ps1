@@ -84,20 +84,23 @@ if (-not (Test-Path $exe)) { throw "published exe not found: $exe" }
 if ($Installer) {
     $isccPath = $Iscc
     if (-not $isccPath) {
-        $isccCommand = Get-Command ISCC.exe -ErrorAction SilentlyContinue
-        if ($isccCommand) { $isccPath = $isccCommand.Source }
-    }
-    if (-not $isccPath) {
+        # Prefer an Inno Setup 7 install over whatever happens to be on PATH:
+        # older 6.x compilers may lack the bundled ChineseSimplified.isl language file.
         $candidates = @(
             (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 7\ISCC.exe"),
-            (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"),
             (Join-Path ${env:ProgramFiles} "Inno Setup 7\ISCC.exe"),
+            (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 7\ISCC.exe"),
+            (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"),
             (Join-Path ${env:ProgramFiles} "Inno Setup 6\ISCC.exe"),
             (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe")
         )
         foreach ($candidate in $candidates) {
             if (Test-Path $candidate) { $isccPath = $candidate; break }
         }
+    }
+    if (-not $isccPath) {
+        $isccCommand = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+        if ($isccCommand) { $isccPath = $isccCommand.Source }
     }
     if (-not $isccPath) {
         throw "ISCC.exe (Inno Setup compiler) not found. Install Inno Setup 7 or pass -Iscc <path>."

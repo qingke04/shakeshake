@@ -37,7 +37,7 @@ jobs:
 
       - name: Build + run tests + build installer
         shell: pwsh
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -Tests -Installer
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -Tests -Installer -Iscc "$env:LOCALAPPDATA\Programs\Inno Setup 7\ISCC.exe"
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
