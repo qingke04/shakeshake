@@ -7,7 +7,7 @@ namespace ShakeShake
     /// Wires the mouse hook to the shake detector and animates the cursor size.
     /// The hook callback only does detection; the timer does the (slower) cursor work.
     /// </summary>
-    internal sealed class AppController : IDisposable
+    public sealed class AppController : IDisposable
     {
         public enum NoticeKind { EngineFailed }
 

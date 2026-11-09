@@ -1,9 +1,8 @@
 using System;
-using System.Windows.Forms;
 
 namespace ShakeShake
 {
-    internal static class Hotkey
+    public static class Hotkey
     {
         public static bool TryParse(string text, out int mods, out int vk)
         {

@@ -11,7 +11,7 @@ namespace ShakeShake
     /// Enlarges the real Windows cursors by loading the user's own cursor files at a bigger
     /// size and swapping them in with SetSystemCursor(); restores with SPI_SETCURSORS.
     /// </summary>
-    internal sealed class CursorEngine
+    public sealed class CursorEngine
     {
         private sealed class Entry
         {

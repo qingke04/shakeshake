@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ShakeShake
 {
     /// <summary>Win32 declarations used by the app.</summary>
-    internal static class Native
+    public static class Native
     {
         // ---- hooks / messages ----
         public const int WH_MOUSE_LL = 14;

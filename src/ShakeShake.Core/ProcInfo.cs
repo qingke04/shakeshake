@@ -7,7 +7,7 @@ using System.Text;
 namespace ShakeShake
 {
     /// <summary>Resolves the executable name of a window / the foreground window.</summary>
-    internal static class ProcInfo
+    public static class ProcInfo
     {
         public static string OwnExeName
         {

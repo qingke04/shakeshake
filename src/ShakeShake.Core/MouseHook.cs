@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace ShakeShake
 {
     /// <summary>Global low level mouse hook (WH_MOUSE_LL).</summary>
-    internal sealed class MouseHook : IDisposable
+    public sealed class MouseHook : IDisposable
     {
         private readonly Native.LowLevelMouseProc _proc;
         private IntPtr _hook;

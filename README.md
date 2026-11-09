@@ -6,16 +6,19 @@ Windows 上的「晃动鼠标放大指针」小工具（类似 macOS 的 shake t
 
 快速来回晃动鼠标 → 系统光标临时放大（默认 3×）→ 停止晃动约 100ms 后恢复。
 
-- 绿色单文件 exe（约 150 KB），无需安装、无需管理员权限、不依赖任何运行库
+- **原生 WinUI 3 界面**（Windows App SDK / Fluent Design）：圆角卡片、开关、Mica 背景，
+  跟随系统浅色 / 深色模式和强调色
+- **安装包形式**，安装向导可自定义安装路径；默认按当前用户安装，无需管理员权限
+- 安装包自带 .NET 8 与 Windows App Runtime（自包含），目标机器不用装任何运行库
 - 中文 / English 双语界面，可选「跟随系统」
 - 可自定义放大倍数、灵敏度、恢复延迟
 - 可指定某些程序（如游戏）内不生效
-- 开机自启、全局快捷键（Ctrl+Alt+S）暂停/恢复
+- 开机自启、全局快捷键（Ctrl+Alt+S）暂停/恢复、Fluent 托盘菜单
 
 ## 下载
 
-到 [Releases](../../releases/latest) 下载 **`ShakeShake-x64.exe`**，双击即用——绿色单文件，
-不需要安装，也不需要 .NET SDK。同一个 Release 里还有 `ShakeShake-Manual.txt`（中文使用说明）。
+到 [Releases](../../releases/latest) 下载 **`ShakeShake-1.2.0-Setup.exe`**（安装版）。
+安装时可以选择安装目录；装完从开始菜单或托盘运行。
 
 > 首次运行时 Windows SmartScreen 可能提示"未知发布者"，点「更多信息」→「仍要运行」即可。
 > 这是未签名程序的正常提示；源码全部公开，可自行编译核对。
@@ -24,61 +27,78 @@ Windows 上的「晃动鼠标放大指针」小工具（类似 macOS 的 shake t
 
 ## 截图
 
-| 中文主界面 | 高级设置 | English |
+| 中文主界面（浅色） | 高级设置 | 深色模式 |
 | --- | --- | --- |
-| ![中文主界面](screenshots/v2-zh.png) | ![高级设置](screenshots/v2-zh-adv.png) | ![English](screenshots/v2-en.png) |
+| ![中文主界面](screenshots/zh-main.png) | ![高级设置](screenshots/zh-advanced.png) | ![深色模式](screenshots/zh-dark.png) |
+
+| English | English (dark) | 托盘菜单 |
+| --- | --- | --- |
+| ![English](screenshots/en-main.png) | ![English dark](screenshots/en-dark.png) | ![托盘菜单](screenshots/zh-menu.png) |
+
+安装包（安装向导可自定义安装位置）：
+
+| 安装向导 | 选择目标位置 |
+| --- | --- |
+| ![安装向导](screenshots/installer-welcome.png) | ![选择目标位置](screenshots/installer-dir.png) |
 
 ## 构建
 
-需要 Windows 自带的 .NET Framework 4.8（Win10/11 默认就有），**不需要装 .NET SDK**。
+需要 **.NET 8 SDK**（构建机用；运行机器不需要）和 **Inno Setup 7**（只有打安装包时需要）。
+不需要 Visual Studio。
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\build.ps1          # 只编译
-powershell -ExecutionPolicy Bypass -File .\build.ps1 -Tests   # 编译 + 跑检测算法单元测试
+powershell -ExecutionPolicy Bypass -File .\build.ps1                    # 只编译
+powershell -ExecutionPolicy Bypass -File .\build.ps1 -Tests             # 编译 + 跑单元测试
+powershell -ExecutionPolicy Bypass -File .\build.ps1 -Tests -Installer  # 编译 + 测试 + 安装包
 ```
 
-产物：`dist\ShakeShake.exe`（64 位，编译时带 `/platform:x64`）。
+产物：
 
-源码是 **C# 5**（系统自带 `csc.exe` 只支持到 C# 5），所以代码里不要用字符串插值、`?.`、`nameof` 等新语法。
-编译时必须带 `/codepage:65001`（源码是 UTF-8），否则中文会乱码。
+- `dist\app\` — 自包含程序目录（可直接运行 `dist\app\ShakeShake.exe`）
+- `dist\ShakeShake-<版本>-Setup.exe` — 安装包（`-Installer` 才会生成）
+
+`build.ps1` 会优先使用 `%USERPROFILE%\.dotnet\dotnet.exe`，找不到时回退到 PATH 里的 `dotnet`。
+安装包编译器默认在 `%LOCALAPPDATA%\Programs\Inno Setup 7\ISCC.exe` 等常见位置查找，
+也可以用 `-Iscc <路径>` 指定。
+
+源码是 C#（.NET 8，`LangVersion=latest`）。界面是 XAML（WinUI 3），改动界面在 `src/ShakeShake.App`。
 
 ## 测试
 
 ```powershell
-tests\DetectorTests.exe          # 晃动检测算法（10 个用例）
-dist\ShakeShake.exe --selftest   # 端到端：装钩子、注入真实鼠标晃动、验证指针变大再恢复
-dist\ShakeShake.exe --animtest   # 采样动画：验证尺寸是一帧帧渐变，而不是一次跳变
+dotnet run --project tests\ShakeShake.Tests     # 晃动检测算法（10 个用例）
+dist\app\ShakeShake.exe --selftest              # 端到端：装钩子、注入真实鼠标晃动、验证指针变大再恢复
+dist\app\ShakeShake.exe --animtest              # 采样动画：验证尺寸是一帧帧渐变，而不是一次跳变
 ```
 
 `--selftest` 会短暂移动鼠标并把指针放大到 3×，约 3 秒，结束后自动还原；结果写入
 `%TEMP%\shakeshake-selftest.log`，退出码 0 = 通过。
 
+重新生成 README 里的截图（需要先编译 Debug 版本）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\capture-ui.ps1
+```
+
 ## 结构
 
 ```
 src/
-  Program.cs          入口、单实例、DPI、全局异常
-  TrayApp.cs          托盘、菜单、快捷键、生命周期
-  SettingsForm.cs     设置窗口（全部控件 + 双语切换）
-  AppController.cs    钩子 → 检测 → 放大/恢复 的状态机
-  ShakeDetector.cs    纯算法：方向反转计数（可单测）
-  MouseHook.cs        WH_MOUSE_LL 全局低级鼠标钩子
-  CursorEngine.cs     SetSystemCursor 放大 / SPI_SETCURSORS 还原 / 崩溃自愈
-  Settings.cs         settings.ini 读写
-  Localization.cs     中英文字符串表
-  AutoStart.cs        HKCU\...\Run
-  Hotkey.cs           快捷键解析
-  ProcInfo.cs         前台进程名（排除列表用）
-  Native.cs           Win32 声明
-  Log.cs / SelfTest.cs
-assets/
-  icon_master.png     图标母版（1254×1254 原图，改图标只改这里）
-  make_icon.py        用 Pillow 从 icon_master.png 生成多尺寸 app.ico
-  app.ico             多尺寸图标（16～256 共 9 档），构建时嵌进 exe
-  preview_*.png       各尺寸预览图（256/32/16 以及 16 像素的放大版）
+  ShakeShake.Core/     纯逻辑，不依赖 UI：晃动检测、光标放大引擎、全局鼠标钩子、
+                       设置读写、开机自启、快捷键解析、前台进程识别
+  ShakeShake.App/      WinUI 3 程序：XAML 界面、托盘图标与 Fluent 菜单、单实例、
+                       ContentDialog 提示、--selftest / --animtest
 tests/
-  DetectorTests.cs    晃动检测算法单测（10 个用例）
-  UiLayoutTests.cs    设置窗口布局回归（展开/收起/中英文）
+  ShakeShake.Tests/    晃动检测算法单测（10 个用例）
+installer/
+  ShakeShake.iss       Inno Setup 安装脚本（per-user、自定义路径、中英双语）
+tools/
+  capture-ui.ps1       自动截取各主题 / 语言下的界面截图
+assets/
+  icon_master.png      图标母版（1254×1254 原图，改图标只改这里）
+  make_icon.py         用 Pillow 从 icon_master.png 生成 app.ico 和灰化的 tray_off.ico
+  app.ico              多尺寸图标（16～256 共 9 档），构建时嵌进 exe
+  tray_off.ico         暂停状态的灰色托盘图标（由 make_icon.py 生成）
 ```
 
 ## 图标
@@ -86,12 +106,9 @@ tests/
 图标母版只有 `assets\icon_master.png` 一个文件，换图标就是换它（或运行时直接传入新图）：
 
 ```powershell
-python .\assets\make_icon.py                 # 用当前 icon_master.png 重新生成 app.ico
+python .\assets\make_icon.py                 # 用当前 icon_master.png 重新生成 app.ico + tray_off.ico
 python .\assets\make_icon.py .\new-icon.png  # 换成新图并重新生成
 ```
-
-`app.ico` 含 16/20/24/32/40/48/64/128/256 九档，构建时用 `/win32icon` 嵌进 exe；
-托盘图标和设置窗口图标都取自 exe 自带的这份图标。
 
 ## 实现要点
 
@@ -108,17 +125,29 @@ python .\assets\make_icon.py .\new-icon.png  # 换成新图并重新生成
 5. **为什么不用系统「指针大小」设置**：Windows 11（本机 build 28000）上，
    改 `CursorBaseSize` / `CursorSize` 后 `SPI_SETCURSORSIZE` 不会即时生效（实测），
    而 `SetSystemCursor` 是可靠的。
+6. **界面**：WinUI 3（Windows App SDK）原生控件 —— `ToggleSwitch`、`Slider`、
+   `ComboBox`、`ListView`、`Expander`、`ContentDialog`；`MicaBackdrop` 做背景，
+   深浅色 / 强调色都交给系统主题资源，不写死颜色。
+7. **托盘**：WinUI 3 没有内置托盘组件，`TrayIcon` 用 `Shell_NotifyIcon`
+   加一个消息窗口，菜单是一个无边框的 WinUI 弹窗（`TrayMenuWindow`），
+   所以外观和系统菜单一致（含勾选状态、深色模式）。
+8. **安装包**：Inno Setup 7，`PrivilegesRequired=lowest` 按用户安装，
+   默认目录 `%LOCALAPPDATA%\Programs\ShakeShake`，向导的「选择目标位置」页可自定义；
+   程序为自包含发布，安装目录里带齐运行库。
 
 ## 已知限制
 
 - 独占全屏 / 自己 `SetCursor` 画光标的游戏看不到效果（系统光标本来也不显示）→ 用排除名单。
 - UAC 安全桌面、锁屏界面钩子收不到、也改不了（系统限制）。
 - 若系统光标方案里某些光标是 `.ani` 动画或路径为空（如 IBeam、Crosshair），会跳过，保持原样。
+- Windows 10 上没有 Mica 背景（自动回退成纯色），其余功能与 Win11 一致。
+- 安装包约 56 MB：WinUI 3 的自包含发布把 .NET 8 和 Windows App Runtime 都打包进去了；
+  这样做的好处是目标机器不用任何运行库、离线可用。
 
 ## 参与贡献
 
-欢迎提 Issue / PR。提交前请先跑一遍 `build.ps1 -Tests`，保证编译和 14 个用例全部通过；
-改动源码时注意保持 **C# 5 语法**和 UTF-8 编码（见上文「构建」）。
+欢迎提 Issue / PR。提交前请先跑一遍 `build.ps1 -Tests`，保证编译和 10 个用例全部通过；
+改动源码时注意保持 UTF-8 编码。
 
 ## 许可证
 

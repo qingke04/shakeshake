@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ShakeShake
 {
-    internal static class Log
+    public static class Log
     {
         private static readonly object Gate = new object();
         private static string _path;
@@ -43,7 +43,7 @@ namespace ShakeShake
         }
     }
 
-    internal static class Clock
+    public static class Clock
     {
         private static readonly double MsPerTick = 1000.0 / System.Diagnostics.Stopwatch.Frequency;
 

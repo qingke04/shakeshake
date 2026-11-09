@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RootNamespace>ShakeShake</RootNamespace>
+    <AssemblyName>ShakeShake</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\assets\app.ico</ApplicationIcon>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <PublishTrimmed>false</PublishTrimmed>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <EnableDefaultXamlItems>true</EnableDefaultXamlItems>
+
+      <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <InformationalVersion>1.2.0</InformationalVersion>
+    <Product>晃晃 ShakeShake</Product>
+    <AssemblyTitle>晃晃 ShakeShake</AssemblyTitle>
+    <Company>ShakeShake</Company>
+    <Description>晃动鼠标放大指针 / Shake the mouse to find the pointer</Description>
+    <Copyright>MIT License</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="1.8.260803003" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="1.8.260921001" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.9457" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ShakeShake.Core\ShakeShake.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\assets\app.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Assets\app.ico</Link>
+    </Content>
+    <Content Include="..\..\assets\tray_off.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Assets\tray_off.ico</Link>
+    </Content>
+  </ItemGroup>
+
+  <!--
+    The WinUI XAML compiler writes *.xbf and <AssemblyName>.pri straight into the
+    build output, but the publish pipeline does not include them automatically.
+    Without these the published (unpackaged) app cannot load its XAML resources.
+  -->
+  </Project>

@@ -7,7 +7,7 @@ namespace ShakeShake
     /// <summary>Two-language UI strings (Simplified Chinese + English).</summary>
     internal static class L
     {
-        public const string Version = "1.1.1";
+        public const string Version = "1.2.0";
 
         private static readonly string[,] Table = new string[,]
         {
@@ -65,6 +65,9 @@ namespace ShakeShake
             { "unit.ms",        "{0} 毫秒", "{0} ms" },
             { "about",          "版本 {0}", "Version {0}" },
             { "hotkey.hint",    "快捷键 {0}：暂停 / 恢复", "Hotkey {0}: pause / resume" },
+            { "page.subtitle", "晃动鼠标，把指针变大", "Shake the mouse to make the pointer bigger" },
+            { "advanced.title", "高级", "Advanced" },
+            { "about.tip",     "配置文件：{0}", "Settings file: {0}" },
         };
 
         private static readonly Dictionary<string, string> Zh = new Dictionary<string, string>();

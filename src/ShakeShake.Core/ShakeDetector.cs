@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ShakeShake
 {
@@ -6,7 +6,7 @@ namespace ShakeShake
     /// Detects a quick back-and-forth "shake" of the mouse.
     /// Pure logic: feed every mouse move, get true while a shake is in progress.
     /// </summary>
-    internal sealed class ShakeDetector
+    public sealed class ShakeDetector
     {
         public int MinReversals = 4;
         public int WindowMs = 400;

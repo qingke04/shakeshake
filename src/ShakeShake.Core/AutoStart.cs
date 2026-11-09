@@ -1,11 +1,10 @@
 using System;
-using System.Windows.Forms;
 using Microsoft.Win32;
 
 namespace ShakeShake
 {
     /// <summary>HKCU\...\Run entry.</summary>
-    internal static class AutoStart
+    public static class AutoStart
     {
         private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
         private const string ValueName = "ShakeShake";
@@ -20,8 +19,8 @@ namespace ShakeShake
                     object v = k.GetValue(ValueName);
                     string s = v as string;
                     if (string.IsNullOrEmpty(s)) return false;
-                    return s.IndexOf("\"" + Application.ExecutablePath + "\"", StringComparison.OrdinalIgnoreCase) >= 0
-                        || s.IndexOf(Application.ExecutablePath, StringComparison.OrdinalIgnoreCase) >= 0;
+                    return s.IndexOf("\"" + Environment.ProcessPath + "\"", StringComparison.OrdinalIgnoreCase) >= 0
+                        || s.IndexOf(Environment.ProcessPath, StringComparison.OrdinalIgnoreCase) >= 0;
                 }
             }
             catch
@@ -38,7 +37,7 @@ namespace ShakeShake
                 {
                     if (enabled)
                     {
-                        k.SetValue(ValueName, "\"" + Application.ExecutablePath + "\" --autostart", RegistryValueKind.String);
+                        k.SetValue(ValueName, "\"" + Environment.ProcessPath + "\" --autostart", RegistryValueKind.String);
                     }
                     else
                     {

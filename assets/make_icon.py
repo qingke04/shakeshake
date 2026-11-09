@@ -43,6 +43,18 @@ def fix_ico_planes(path):
         f.write(data)
 
 
+def gray_frame(frame):
+    """Greyed-out copy used for the paused tray icon (same look as v1.x)."""
+    px = frame.load()
+    for y in range(frame.height):
+        for x in range(frame.width):
+            r, g, b, a = px[x, y]
+            value = int(0.3 * r + 0.59 * g + 0.11 * b)
+            value = min(255, 120 + value // 4)
+            px[x, y] = (value, value, value, a)
+    return frame
+
+
 def main():
     if len(sys.argv) > 1:
         src = os.path.abspath(sys.argv[1])
@@ -80,7 +92,19 @@ def main():
         os.path.join(HERE, "preview_16_zoom.png")
     )
 
+    # Grey variant of the same artwork for the "paused" tray icon.
+    off_frames = [gray_frame(f.copy()) for f in frames]
+    off = os.path.join(HERE, "tray_off.ico")
+    off_frames[-1].save(
+        off,
+        format="ICO",
+        sizes=[(s, s) for s in SIZES],
+        append_images=off_frames[:-1],
+    )
+    fix_ico_planes(off)
+
     print("wrote:", ico, os.path.getsize(ico), "bytes")
+    print("wrote:", off, os.path.getsize(off), "bytes")
 
 
 if __name__ == "__main__":

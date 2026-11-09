@@ -1,53 +1,112 @@
 # ShakeShake build script
-# Uses the C# 5 compiler that ships with Windows (.NET Framework 4.8) - no SDK needed.
+# Builds the WinUI 3 app, runs the unit tests, publishes a self-contained folder
+# and (optionally) compiles the Inno Setup installer.
+#
+# Requirements:
+#   - .NET 8 SDK (https://dotnet.microsoft.com/download/dotnet/8.0)
+#   - Inno Setup 7 (only needed for -Installer)
+#
+# Examples:
+#   powershell -ExecutionPolicy Bypass -File .\build.ps1                 # build only
+#   powershell -ExecutionPolicy Bypass -File .\build.ps1 -Tests          # build + run tests
+#   powershell -ExecutionPolicy Bypass -File .\build.ps1 -Tests -Installer
 param(
-    [switch]$Tests
+    [switch]$Tests,
+    [switch]$Installer,
+    [string]$Configuration = "Release",
+    [string]$Iscc = ""
 )
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $root
 
-$csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-if (-not (Test-Path $csc)) {
-    throw "Cannot find the .NET Framework compiler: $csc"
+# ---------------------------------------------------------------- tools
+
+$dotnet = Join-Path $env:USERPROFILE ".dotnet\dotnet.exe"
+if (-not (Test-Path $dotnet)) {
+    $cmd = Get-Command dotnet -ErrorAction SilentlyContinue
+    if ($cmd) { $dotnet = $cmd.Source }
+}
+if (-not $dotnet) {
+    throw "dotnet SDK not found. Install the .NET 8 SDK first (see README.md)."
 }
 
-New-Item -ItemType Directory -Force (Join-Path $root 'dist') | Out-Null
-$out = Join-Path $root 'dist\ShakeShake.exe'
-$icon = Join-Path $root 'assets\app.ico'
+$appProject = Join-Path $root "src\ShakeShake.App\ShakeShake.App.csproj"
+$publishDir = Join-Path $root "dist\app"
 
-$sources = Get-ChildItem (Join-Path $root 'src\*.cs') | ForEach-Object { $_.FullName }
-$common = @(
-    '/nologo', '/codepage:65001', '/optimize+',
-    '/r:System.dll', '/r:System.Core.dll', '/r:System.Drawing.dll', '/r:System.Windows.Forms.dll'
-)
+$version = ""
+$m = Select-String -Path $appProject -Pattern "<Version>([^<]+)</Version>"
+if ($m) { $version = $m.Matches[0].Groups[1].Value }
+if (-not $version) { throw "cannot read <Version> from $appProject" }
 
-$appArgs = @('/target:winexe', '/platform:x64', ('/out:' + $out))
-if (Test-Path $icon) { $appArgs += ('/win32icon:' + $icon) }
+"dotnet  : $dotnet"
+"version : $version"
 
-& $csc @($appArgs + $common + $sources)
+# ---------------------------------------------------------------- build
+
+& $dotnet build $appProject -c $Configuration -p:Platform=x64 -v m
 if ($LASTEXITCODE -ne 0) { throw "build failed" }
 
-$exe = Get-Item $out
-"built: {0}  ({1:N0} bytes)" -f $exe.FullName, $exe.Length
-
 if ($Tests) {
-    $testOut = Join-Path $root 'tests\DetectorTests.exe'
-    & $csc @('/target:exe', ('/out:' + $testOut), '/r:System.dll', '/r:System.Core.dll',
-              '/nologo', '/codepage:65001',
-              (Join-Path $root 'src\ShakeDetector.cs'),
-              (Join-Path $root 'tests\DetectorTests.cs'))
-    if ($LASTEXITCODE -ne 0) { throw "test build failed" }
-    & $testOut
+    & $dotnet run --project (Join-Path $root "tests\ShakeShake.Tests\ShakeShake.Tests.csproj") -c $Configuration -v q
     if ($LASTEXITCODE -ne 0) { throw "tests failed" }
+}
 
-    $uiOut = Join-Path $root 'tests\UiLayoutTests.exe'
-    $uiArgs = @('/target:exe', ('/out:' + $uiOut), '/main:ShakeShake.Tests.UiLayoutTests',
-                '/nologo', '/codepage:65001',
-                '/r:System.dll', '/r:System.Core.dll', '/r:System.Drawing.dll', '/r:System.Windows.Forms.dll')
-    & $csc @($uiArgs + $sources + (Join-Path $root 'tests\UiLayoutTests.cs'))
-    if ($LASTEXITCODE -ne 0) { throw "ui test build failed" }
-    & $uiOut
-    if ($LASTEXITCODE -ne 0) { throw "ui tests failed" }
+# ---------------------------------------------------------------- publish
+
+if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
+& $dotnet publish $appProject -c $Configuration -r win-x64 --self-contained true `
+    -p:Platform=x64 -p:WindowsAppSDKSelfContained=true -o $publishDir -v m
+if ($LASTEXITCODE -ne 0) { throw "publish failed" }
+
+# The WinUI XAML compiler writes *.xbf / <AssemblyName>.pri into the build output but
+# the publish pipeline does not carry them along; without them the unpackaged app
+# cannot load its XAML. Copy them next to the published exe.
+$buildOut = Join-Path $root ("src\ShakeShake.App\bin\x64\" + $Configuration)
+$pri = Get-ChildItem $buildOut -Recurse -File -Filter "ShakeShake.pri" -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if ($pri) {
+    Copy-Item $pri.FullName (Join-Path $publishDir "ShakeShake.pri") -Force
+    Get-ChildItem $pri.Directory -File -Filter "*.xbf" | ForEach-Object {
+        Copy-Item $_.FullName (Join-Path $publishDir $_.Name) -Force
+    }
+} else {
+    throw "ShakeShake.pri not found under $buildOut (did the XAML compiler run?)"
+}
+
+$exe = Join-Path $publishDir "ShakeShake.exe"
+if (-not (Test-Path $exe)) { throw "published exe not found: $exe" }
+"published: $exe"
+
+# ---------------------------------------------------------------- installer
+
+if ($Installer) {
+    $isccPath = $Iscc
+    if (-not $isccPath) {
+        $isccCommand = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+        if ($isccCommand) { $isccPath = $isccCommand.Source }
+    }
+    if (-not $isccPath) {
+        $candidates = @(
+            (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 7\ISCC.exe"),
+            (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"),
+            (Join-Path ${env:ProgramFiles} "Inno Setup 7\ISCC.exe"),
+            (Join-Path ${env:ProgramFiles} "Inno Setup 6\ISCC.exe"),
+            (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe")
+        )
+        foreach ($candidate in $candidates) {
+            if (Test-Path $candidate) { $isccPath = $candidate; break }
+        }
+    }
+    if (-not $isccPath) {
+        throw "ISCC.exe (Inno Setup compiler) not found. Install Inno Setup 7 or pass -Iscc <path>."
+    }
+
+    "iscc    : $isccPath"
+    & $isccPath "/DAppVersion=$version" (Join-Path $root "installer\ShakeShake.iss")
+    if ($LASTEXITCODE -ne 0) { throw "installer build failed" }
+
+    $setup = Join-Path $root ("dist\ShakeShake-" + $version + "-Setup.exe")
+    if (Test-Path $setup) { "setup   : $setup" }
 }

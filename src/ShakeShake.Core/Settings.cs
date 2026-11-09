@@ -7,7 +7,7 @@ using System.Text;
 namespace ShakeShake
 {
     /// <summary>User settings, stored as a small human-editable INI file.</summary>
-    internal sealed class Settings
+    public sealed class Settings
     {
         public string Language = "auto";     // auto | zh-CN | en-US
         public bool Enabled = true;
